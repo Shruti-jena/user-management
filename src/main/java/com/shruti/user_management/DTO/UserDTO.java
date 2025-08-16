@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 //Lombok to generate boiler plate code
 import lombok.Data;
 
+@Data
 public class UserDTO {
 
 @NotBlank(message = "Name is required")
