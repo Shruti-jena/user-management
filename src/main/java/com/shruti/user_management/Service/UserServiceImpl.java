@@ -81,8 +81,11 @@ public class UserServiceImpl implements UserService {
     //Delete
     @Override
     public void deleteUser(Long id){
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with ID " + id));
+        userRepository.delete(user);
     }
+    
 
     //MAPPING HELPERS
     //Mapping DTO <-> Entity

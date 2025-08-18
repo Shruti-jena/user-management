@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@Table(name = "users")
 public class User {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id; //Primary Key
+    private Long id; //Primary Key
 
     private String name;
     private String email;
@@ -27,11 +28,11 @@ public class User {
 
     //Getters & Setters
     public Long getId(){
-        return Id;
+        return id;
     }
 
-    public void setId(Long Id){
-        this.Id = Id;
+    public void setId(Long id){
+        this.id = id;
     }
 
     public String getName(){
