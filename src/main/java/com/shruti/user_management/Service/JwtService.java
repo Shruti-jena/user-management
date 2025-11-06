@@ -5,7 +5,9 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
-
+import io.jsonwebtoken.io.Decoders;
+import org.springframework.beans.factory.annotation.Value;
+import java.util.function.Function;
 import java.security.Key;
 import java.util.*;
 
@@ -19,61 +21,67 @@ public class JwtService {
     @Value("${jwt.expiration}") //expiration time in ms from application.properties
     private long jwtExpiration;
 
-    // Extract username
+   //Decodes the base64 Secret key and creates the signing key
+   private Key getSignInKey(){
+    byte[] keyBytes =  Decoders.BASE64.decode(secret);
+    return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    //Public Method for simple token generation
+    public String generateToken(String username)
+    {
+        Map<String, Object> claims =  new HashMap<>();
+        return createToken(claims,username);
+    }
+
+    //Private method to build the token String
+     private String createToken(Map<String,Object> claims, String username)
+    {
+        return Jwts.builder()
+                    .setClaims(claims) //Custom data/roles'
+                    .setSubject(username)
+                    .setIssuedAt(new Date(System.currentTimeMillis()))
+                    .setExpiration(new Date(System.currentTimeMillis()+jwtExpiration))
+                    .signWith(getSignInKey(),SignatureAlgorithm.HS256)
+                    .compact();
+    }
+
+    //Implement Claim Extraction to read back data from token
+    private Claims extractAllClaims(String token){
+        return Jwts
+                .parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    //Public generic method to extract any single Claim
+    public <T> T extractClaim(String token, Function<Claims,T> claimsResolver){
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    //Public generic method to extracty the username(subject)
     public String extractUsername(String token){
         return extractClaim(token, Claims::getSubject);
     }
 
-    //Generic Claim Extractor
-    public <T> T extractClaim(String token,Function<Claims,T> claimsResolver){
-        final Claims claims = extractAll(Claims(token));
-        return claimsResolver.apply(claims);
+    //Public generic method to extracty the username(subject)
+    public Date extractExpiration(String token){
+        return extractClaim(token, Claims::getExpiration);
     }
 
-    //Generate token with only username
-    public String generateToken(String username){
-        return generateToken(new HashMap<>(), username);
-    }
+    //Implement Token Validation
 
-    //Generate token with extra claims
-    public String generateToken(Map<String,Object> extraClaims,String username){
-        return Jwts.builder()
-                    .setClaims(extraClaims)
-                    .setSubject(username)
-                    .setIssuedAt(new Date(System.currentTimeMillis()))
-                    .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                    .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                    .compact();
-    }
-
-    //Validate token against username
-    public boolean isTokenValid(String token, String username){
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username)) && !isTokenExpired(token);
-    }
-
-    //Check if token expired
-    private boolean isTokenExpired(String token){
+    //Checks if token expiration date has crossed current time
+    public boolean isTokenExpired(String token){
         return extractExpiration(token).before(new Date());
     }
 
-    private Date extractExpiration(String token){
-        return extractClaim(token,Claims::getExpiration);
+    //Checks if the token is valid for given username and hasnt expired
+    public boolean isTokenValid(String token, String username){
+        final String tokenUsername = extractUsername(token);
+        return (tokenUsername.equals(username) && !isTokenExpired(token));
     }
-
-    //Parse all claims
-    private Claims extractAllClaims(String token){
-        return Jwts.parseBuilder()
-                   .setSigningKey(getSignInKey())
-                   .build()
-                   .parseClaimsJws(token)
-                   .getBody();
-    }
-
-    //Decode base secret and create signing key
-    private key getSignInKey(){
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
 }

@@ -11,7 +11,6 @@ import lombok.Data;
 @Data
 public class UserDTO {
 
-@NotBlank(message = "Id is required")
 private Long id;
 
 @NotBlank(message = "Name is required")

@@ -1,5 +1,11 @@
 package com.shruti.user_management.Model;
 
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +30,17 @@ public class User {
         this.name = name;
         this.email = email;
         this.password = password;
+    }
+
+     // --- USERDETAILS IMPLEMENTATION (Required by Spring Security) ---
+
+    /**
+     * CRITICAL FIX: This method provides the user's roles to Spring Security.
+     * We grant a default "ROLE_USER" to allow the user to pass the 
+     * .anyRequest().authenticated() check.
+     */
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     //Getters & Setters

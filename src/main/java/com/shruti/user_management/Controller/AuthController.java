@@ -1,75 +1,78 @@
 package com.shruti.user_management.Controller;
 
-import com.shruti.user_management.DTO.AuthRequest;
-import com.shruti.user_management.DTO.AuthResponse;
-import com.shruti.user_management.DTO.UserDTO;
+import com.shruti.user_management.DTO.JwtResponse;
+import com.shruti.user_management.DTO.loginRequest;
+import com.shruti.user_management.DTO.registerRequest;
+import com.shruti.user_management.Model.User;
+import com.shruti.user_management.Repository.UserRepository;
 import com.shruti.user_management.Service.JwtService;
-import com.shruti.user_management.Service.UserService;
-
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import java.util.Map;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
-/**
- * Handles:
- * - POST /api/auth/signup → create user (password is hashed)
- * - POST /api/auth/login  → authenticate and return JWT
- */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authenticationmanager;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final UserService userService;
     @Autowired
-    public AuthController(AuthenticationManager authenticationmanager,PasswordEncoder passwordEncoder,JwtService jwtService,UserService userService){
-            this.authenticationmanager=authenticationmanager;
-            this.passwordEncoder = passwordEncoder;
-            this.jwtService = jwtService;
-            this.userService = userService;
-    }
-    
-    //SIGNUP : Create a new user with hashed password
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtService jwtService;
+
+    // Handles user registration
     @PostMapping("/signup")
-    public ResponseEntity<UserDTO> signup(@Valid @RequestBody UserDTO request){
-        //Hash the plain-text password before saving
-        request.setPassword(passwordEncoder.encode(request.getPassword()));
-        UserDTO created =  userService.createUser(request);
-        return ResponseEntity.status(201).body(created);
+    public ResponseEntity<?> registerUser(@Valid @RequestBody registerRequest registerRequest) {
+        if (userRepository.existsByEmail(registerRequest.getEmail())) {
+            return new ResponseEntity<>("Email is already in use!", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = new User();
+        user.setName(registerRequest.getName());
+        user.setEmail(registerRequest.getEmail());
+        // Store password securely
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+
+        userRepository.save(user);
+
+        return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
     }
 
-    //LOGIN: Verify credentials, then return a JWT
+    // Handles user login and token generation (FIXED)
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request){
-        try{
-            //We treat "email" as the username(principal)
-            var authToken =  new UsernamePasswordAuthenticationToken(
-                request.getEmail(),request.getPassword()
-            );
-            authenticationmanager.authenticate(authToken);//throws Exception if invalid
+    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody loginRequest loginRequest) {
 
-            //If we get here, credentials are valid - issue JWT
-            String token = jwtService.generateToken(request.getEmail());
-            return ResponseEntity.ok(new AuthResponse(token));
-        }
+        // 1. Authenticate the user credentials
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword()
+                )
+        );
 
-        catch(AuthenticationException ex){
-            return ResponseEntity.status(401).body("Invalid email or password");
-        }
+        // 2. Set the authentication object in the security context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // 3. Generate the JWT token
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String jwt = jwtService.generateToken(userDetails.getUsername());
+
+        // 4. Return the token in the response DTO
+        return ResponseEntity.status(HttpStatus.OK).body(new JwtResponse(jwt));
     }
-    
 }

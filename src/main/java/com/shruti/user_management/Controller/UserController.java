@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 //For injecting dependencies
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties.Authentication;
 
 //Our DTO and Service
 import com.shruti.user_management.DTO.UserDTO;
@@ -52,4 +53,23 @@ public class UserController {
     public void deleteUser(@PathVariable("id") Long id){
         userService.deleteUser(id);
     }
+    @GetMapping("/me")
+public UserDTO getAuthenticatedUser(Authentication authentication){
+    // 'authentication.getName()' retrieves the email (the subject of the JWT)
+    String authenticatedEmail = authentication.getUsername();
+    
+    // You'd need to add a new method in UserService to find a user by email
+    // Since you don't have that, we'll use a placeholder for now:
+    // return userService.getUserByEmail(authenticatedEmail); 
+    
+    // Placeholder using existing service methods (replace with findByEmail later)
+    // NOTE: This is a placeholder and may not be feasible without findByEmail
+    // You would typically call a new service method like:
+    // return userService.getUserByEmail(authenticatedEmail);
+    
+    return userService.getAllUsers().stream()
+        .filter(user -> user.getEmail().equals(authenticatedEmail))
+        .findFirst()
+        .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+}
 }

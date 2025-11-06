@@ -4,22 +4,24 @@ import com.shruti.user_management.DTO.UserDTO;
 import com.shruti.user_management.Model.User;
 import com.shruti.user_management.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service //Marks the class as service bean
 @Transactional //Makes method run in DB transaction by default
 public class UserServiceImpl implements UserService {
 
-  
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired //constructor injection
-    public UserServiceImpl(UserRepository userRepository){
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     //Create User
@@ -31,8 +33,11 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already in use" + userDTO.getEmail());
         }
         User user = mapToEntity(userDTO);
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         User savedUser = userRepository.save(user);
-        return mapToDTO(savedUser);
+        UserDTO responUserDTO = mapToDTO(savedUser);
+        responUserDTO.setPassword(null);
+        return responUserDTO;
     }
 
     //Read All Users -getAllUsers
@@ -51,7 +56,9 @@ public class UserServiceImpl implements UserService {
     public UserDTO getUserById(Long id) {
         User user =  userRepository.findById(id)
                             .orElseThrow(() -> new RuntimeException("User not found with ID" + id));
-            return mapToDTO(user);                
+            UserDTO DTO = mapToDTO(user);    
+            DTO.setPassword(null);
+            return DTO;            
     }
     
     //Update
@@ -71,11 +78,13 @@ public class UserServiceImpl implements UserService {
         }
     
         if (userDTO.getPassword() != null && !userDTO.getPassword().isBlank()) {
-            user.setPassword(userDTO.getPassword());
+            user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
         
         User updated =  userRepository.save(user);
-        return mapToDTO(updated);
+        UserDTO DTO = mapToDTO(updated);
+        DTO.setPassword(null);
+        return DTO;
     }
 
     //Delete
