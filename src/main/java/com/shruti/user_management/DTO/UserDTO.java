@@ -22,4 +22,6 @@ private String email;
 
 @NotBlank(message = "Passowrd is required")
 private String password;
+
+private String Role;
 }

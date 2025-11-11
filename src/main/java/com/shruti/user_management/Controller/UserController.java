@@ -6,10 +6,14 @@ import org.springframework.web.bind.annotation.*;
 //For injecting dependencies
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties.Authentication;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 //Our DTO and Service
 import com.shruti.user_management.DTO.UserDTO;
 import com.shruti.user_management.Service.UserService;
+
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -32,20 +36,23 @@ public class UserController {
 
     //Get User by ID
     @GetMapping("/{id}")
-    public UserDTO getUserById(@PathVariable("id") Long id){
-        return userService.getUserById(id);
+    public ResponseEntity<UserDTO> getUserById(@PathVariable("id") Long id){
+        UserDTO user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
 
     //Create new User
     @PostMapping
-    public UserDTO createUser(@RequestBody UserDTO userDTO){
-          return userService.createUser(userDTO);
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO){
+         UserDTO createdUser = userService.createUser(userDTO);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
     //Update a user
     @PutMapping("/{id}")
-    public UserDTO updateUser(@PathVariable("id") Long id, @RequestBody UserDTO userDTO){
-        return userService.updateUser(id, userDTO);
+    public ResponseEntity<UserDTO> updateUser(@PathVariable("id") Long id, @RequestBody UserDTO userDTO){
+        UserDTO user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
 
     //Delete a user
