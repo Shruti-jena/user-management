@@ -1,6 +1,8 @@
 // Package Declaration
 package com.shruti.user_management.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 // Validation Annotations
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -21,7 +23,8 @@ private String name;
 private String email;
 
 @NotBlank(message = "Passowrd is required")
+@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 private String password;
 
-private String Role;
+private String role;
 }

@@ -104,6 +104,7 @@ public class UserServiceImpl implements UserService {
         u.setName(dto.getName());
         u.setEmail(dto.getEmail());
         u.setPassword(dto.getPassword());
+        u.setRole(dto.getRole()); 
         return u;
     }
 
@@ -113,8 +114,8 @@ public class UserServiceImpl implements UserService {
     dto.setName(u.getName());
     dto.setEmail(u.getEmail());
     dto.setPassword(u.getPassword());
+    dto.setRole(u.getRole()); 
     return dto;
-    }
-    
+    }  
 
 }
