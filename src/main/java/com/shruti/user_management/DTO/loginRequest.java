@@ -8,7 +8,7 @@ import lombok.Setter;
 // Used for POST /api/auth/login
 @Getter
 @Setter
-public class loginRequest {
+public class LoginRequest {
 
     @NotBlank(message = "Email is required.")
     @Email(message = "Email must be valid.")

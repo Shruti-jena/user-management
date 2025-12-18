@@ -1,8 +1,8 @@
 package com.shruti.user_management.Controller;
 
 import com.shruti.user_management.DTO.JwtResponse;
-import com.shruti.user_management.DTO.loginRequest;
-import com.shruti.user_management.DTO.registerRequest;
+import com.shruti.user_management.DTO.LoginRequest;
+import com.shruti.user_management.DTO.RegisterRequest;
 import com.shruti.user_management.Model.User;
 import com.shruti.user_management.Repository.UserRepository;
 import com.shruti.user_management.Service.JwtService;
@@ -37,7 +37,7 @@ public class AuthController {
 
     // Handles user registration
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody registerRequest registerRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             return new ResponseEntity<>("Email is already in use!", HttpStatus.BAD_REQUEST);
         }
@@ -55,7 +55,7 @@ public class AuthController {
 
     // Handles user login and token generation (FIXED)
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody loginRequest loginRequest) {
+    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
         // 1. Authenticate the user credentials
         Authentication authentication = authenticationManager.authenticate(

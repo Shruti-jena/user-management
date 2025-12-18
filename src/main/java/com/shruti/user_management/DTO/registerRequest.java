@@ -8,7 +8,7 @@ import lombok.Setter;
 // Used for POST /api/auth/signup
 @Getter
 @Setter
-public class registerRequest {
+public class RegisterRequest {
     
     // We expect email, password, and name from the user.
     
