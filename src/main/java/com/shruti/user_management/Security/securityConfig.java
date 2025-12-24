@@ -32,7 +32,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class securityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
 
     /**
@@ -44,7 +43,10 @@ public class securityConfig {
             //Disable CSRF Protection (standard for stateless REST API's)
             .csrf(AbstractHttpConfigurer::disable)
             //Define authorisation rules
-            .authorizeHttpRequests(auth ->auth.requestMatchers("/api/auth/**").permitAll()
+            .authorizeHttpRequests(auth ->auth.requestMatchers("/api/auth/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/v3/api-docs/**").permitAll()
             //Require authentication for all other endpoints
             .anyRequest().authenticated()
             )
@@ -64,7 +66,7 @@ public class securityConfig {
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 

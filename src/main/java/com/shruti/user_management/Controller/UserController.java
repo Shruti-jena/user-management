@@ -13,10 +13,15 @@ import org.springframework.http.ResponseEntity;
 import com.shruti.user_management.DTO.UserDTO;
 import com.shruti.user_management.Service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import java.util.List;
 
+@Tag(name = "User APIs", description = "User management operations")
 @RestController  //Marks this as a REST API Controller
 @RequestMapping("/api/users")  //Base URL path for all endpoints here
 public class UserController {
@@ -34,6 +39,11 @@ public class UserController {
         return userService.getAllUsers();
     }
 
+    @Operation(summary = "Get user by ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User found"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
     //Get User by ID
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable("id") Long id){
@@ -41,6 +51,12 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @Operation(summary = "Create a new user")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "User created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "409", description = "Email already exists")
+    })
     //Create new User
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO){
@@ -48,6 +64,16 @@ public class UserController {
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
+    @Operation(
+        summary = "Update an existing user",
+        description = "Updates user details by user ID. Only provided fields will be updated."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "409", description = "Email already exists")
+    })
     //Update a user
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id,@RequestBody UserDTO userDTO) {  
@@ -55,6 +81,14 @@ public class UserController {
     return ResponseEntity.ok(updatedUser);
     }
 
+    @Operation(
+        summary = "Delete a user",
+        description = "Deletes a user by user ID"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
     //Delete a user
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable("id") Long id){
